@@ -1,25 +1,29 @@
-﻿@using Microsoft.AspNetCore.Identity;
-@inject SignInManager<Users> signInManager;
-
-<ul class="navbar-nav ms-auto">
-    @if(signInManager.IsSignedIn(User))
+﻿<ul class="navbar-nav">
+    @if (Context.Session.GetString("UserId") != null)
     {
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-controller="Account" asp-action="Logout" >Logout</a>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+               data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="me-1">👤</span> @Context.Session.GetString("UserName")
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><span class="dropdown-item-text"><strong>@Context.Session.GetString("UserName")</strong></span></li>
+                <li><span class="dropdown-item-text text-muted">@Context.Session.GetString("Email")</span></li>
+                <li><span class="dropdown-item-text text-muted">Role: @Context.Session.GetString("UserRole")</span></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Account" asp-action="Logout_Get">Logout</a>
+                </li>
+            </ul>
         </li>
     }
     else
     {
-       <li class="nav-item">
-           <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
-       </li>
-
-       <li class="nav-item">
-           <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
-       </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Account" asp-action="Register">Register</a>
+        </li>
     }
 </ul>
-
-
-
-

@@ -1,8 +1,52 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Voilaa!</h1>
-    <p> <a href="https://learn.microsoft.com/aspnet/core">Build Web apps using ASP.NET Core</a>.</p>
+<div class="container mt-5">
+    <div class="border border-dark p-5 text-center">
+        <h1>Student Management System</h1>
+        <p>Manage students, courses and fees</p>
+        
+        @if (Context.Session.GetString("UserId") == null)
+        {
+            <div class="mt-4">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-dark me-2">Login</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-outline-dark">Register</a>
+            </div>
+        }
+    </div>
+
+    @if (Context.Session.GetString("UserId") != null)
+    {
+        <div class="row mt-4 g-3">
+            <div class="col-6 col-md-3">
+                <a asp-controller="Students" asp-action="Index" class="text-decoration-none">
+                    <div class="border border-dark p-4 text-center text-dark">
+                        <h4>Students</h4>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-controller="Students" asp-action="Create" class="text-decoration-none">
+                    <div class="border border-dark p-4 text-center text-dark">
+                        <h4>Add New</h4>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-controller="Account" asp-action="VerifyEmail" class="text-decoration-none">
+                    <div class="border border-dark p-4 text-center text-dark">
+                        <h4>Password</h4>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-controller="Account" asp-action="Logout_Get" class="text-decoration-none">
+                    <div class="border border-dark p-4 text-center text-dark">
+                        <h4>Logout</h4>
+                    </div>
+                </a>
+            </div>
+        </div>
+    }
 </div>

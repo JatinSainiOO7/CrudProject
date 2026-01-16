@@ -1,20 +1,11 @@
 ﻿using CrudProject.Data;
 using CrudProject.Models;
-using CrudProject.ViewModel;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace CrudProject.Controllers
 {
-    //[Authorize]
     public class StudentsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,15 +15,27 @@ namespace CrudProject.Controllers
             _context = context;
         }
 
-        // GET: Students
+
+        private bool IsLoggedIn()
+        {
+            return HttpContext.Session.GetString("UserId") != null;
+        }
+
+
         public async Task<IActionResult> Index()
         {
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account");
+
             return View(await _context.Students.OrderByDescending(e => e.StudentId).ToListAsync());
         }
 
-        // GET: Students/Details/5
+
         public async Task<IActionResult> Details(int? id)
         {
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account");
+
             if (id == null)
             {
                 return NotFound();
@@ -48,9 +51,11 @@ namespace CrudProject.Controllers
             return View(student);
         }
 
-        // GET: Students/Create
         public IActionResult Create()
         {
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account");
+
             ViewData["Course"] = _context.CourseManagement.ToList();
             return View();
         }
@@ -59,6 +64,12 @@ namespace CrudProject.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Student model)
         {
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account");
+            // Remove validation for fields set server-side
+            ModelState.Remove("Course");
+            ModelState.Remove("Fees");
+
             // Check for existing User
             var existingStudent = await _context.Students
                 .FirstOrDefaultAsync(u => u.Email == model.Email);
@@ -68,7 +79,7 @@ namespace CrudProject.Controllers
                 ModelState.AddModelError("", "Email already exists");
             }
 
-            
+
             if (!Validation.IsValidEmail(model.Email))
             {
                 ModelState.AddModelError("Email", "Invalid Email");
@@ -79,33 +90,28 @@ namespace CrudProject.Controllers
                 ModelState.AddModelError("Phone", "Invalid Phone Number");
             }
 
+
+            var course = await _context.CourseManagement
+                .FirstOrDefaultAsync(k => k.CourseId == model.CourseId);
+
+            if (course == null)
+            {
+                ModelState.AddModelError("CourseId", "Please select a valid course");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewData["Course"] = _context.CourseManagement.ToList();
                 return View(model);
             }
 
-            // Find selected course
-            var course = await _context.CourseManagement
-                .FirstOrDefaultAsync(k => k.CourseId == model.CourseId);
-
-            if (course == null)
-            {
-                ModelState.AddModelError("CourseId", "Invalid Course Selected");
-                ViewData["Course"] = _context.CourseManagement.ToList();
-                return View(model);
-            }
-
-            model.Course = course.CourseName;
-            model.Fees = course.Fees;
-
             var newStudent = new Student
             {
                 Name = model.Name,
                 Email = model.Email,
-                Course = model.Course,
-                CourseId= model.CourseId,
-                Fees = model.Fees,
+                Course = course.CourseName,
+                CourseId = model.CourseId,
+                Fees = course.Fees,
                 EnrollmentDate = model.EnrollmentDate,
                 Phone = model.Phone,
                 Address = model.Address
@@ -117,9 +123,12 @@ namespace CrudProject.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Students/Edit/5
+
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account");
+
             if (id == null)
             {
                 return NotFound();
@@ -133,59 +142,88 @@ namespace CrudProject.Controllers
             ViewData["Course"] = _context.CourseManagement.ToList();
 
             return View(student);
-
         }
 
-        // POST: Students/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Student student)
         {
-            if (!Validation.IsValidEmail(student.Email))
-            {
-                ModelState.AddModelError("Email", "Invalid Email Format");
-            }
-            
-            if (!Validation.IsValidPhone(student.Phone))
-            {
-                ModelState.AddModelError("Phone", "Invalid Phone Number");
-            }
-           
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account");
+
+            ModelState.Remove("Course");
+            ModelState.Remove("Fees");
+
             if (id != student.StudentId)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!Validation.IsValidEmail(student.Email))
             {
-                try
-                {
-                    _context.Update(student);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!StudentExists(student.StudentId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("Email", "Invalid Email Format");
             }
-            ViewData["Course"] = _context.CourseManagement.ToList();
 
-            return View(student);
+            if (!Validation.IsValidPhone(student.Phone))
+            {
+                ModelState.AddModelError("Phone", "Invalid Phone Number");
+            }
+
+
+            var course = await _context.CourseManagement
+                .FirstOrDefaultAsync(k => k.CourseId == student.CourseId);
+
+            if (course == null)
+            {
+                ModelState.AddModelError("CourseId", "Please select a valid course");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewData["Course"] = _context.CourseManagement.ToList();
+                return View(student);
+            }
+
+            try
+            {
+                var existingStudent = await _context.Students.FindAsync(id);
+                if (existingStudent == null)
+                {
+                    return NotFound();
+                }
+
+                existingStudent.Name = student.Name;
+                existingStudent.Email = student.Email;
+                existingStudent.CourseId = student.CourseId;
+                existingStudent.Course = course.CourseName;
+                existingStudent.Fees = course.Fees;
+                existingStudent.EnrollmentDate = student.EnrollmentDate;
+                existingStudent.Phone = student.Phone;
+                existingStudent.Address = student.Address;
+
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!StudentExists(student.StudentId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: Students/Delete/5
+
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account");
+
             if (id == null)
             {
                 return NotFound();
@@ -201,11 +239,14 @@ namespace CrudProject.Controllers
             return View(student);
         }
 
-        // POST: Students/Delete/5
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account");
+
             var student = await _context.Students.FindAsync(id);
             if (student != null)
             {
@@ -221,38 +262,38 @@ namespace CrudProject.Controllers
             return _context.Students.Any(e => e.StudentId == id);
         }
 
-       ////AddCourse
-       // //GET
-       // public async Task<IActionResult> AddCourse(int? id)
-       // {
-       //     return View();
-       // }
+        ////AddCourse
+        // //GET
+        // public async Task<IActionResult> AddCourse(int? id)
+        // {
+        //     return View();
+        // }
 
-       // //Post
-       // [HttpPost]
-       // public async Task<IActionResult> AddCourse( CourseManagement model)
-       // {
-       //     var course = await _context.Students.FindAsync();
-       //     if(course != null)
-       //     {
-       //         ModelState.AddModelError("Course", "Course already exist");
-       //         return View();
-       //     }
-            
-       //     //add course
+        // //Post
+        // [HttpPost]
+        // public async Task<IActionResult> AddCourse( CourseManagement model)
+        // {
+        //     var course = await _context.Students.FindAsync();
+        //     if(course != null)
+        //     {
+        //         ModelState.AddModelError("Course", "Course already exist");
+        //         return View();
+        //     }
 
-       //     CourseManagement Addcourse = new CourseManagement
-       //     {
-       //         CourseName = model.CourseName,
-       //         Fees = model.Fees,
-       //         Semester = model.Semester
-       //     };
+        //     //add course
 
-       //     _context.CourseManagement.Add(Addcourse);
-       //     await _context.SaveChangesAsync();
-       //     return RedirectToAction("Index");
+        //     CourseManagement Addcourse = new CourseManagement
+        //     {
+        //         CourseName = model.CourseName,
+        //         Fees = model.Fees,
+        //         Semester = model.Semester
+        //     };
 
-       // }
+        //     _context.CourseManagement.Add(Addcourse);
+        //     await _context.SaveChangesAsync();
+        //     return RedirectToAction("Index");
+
+        // }
 
 
         [HttpGet]
@@ -279,7 +320,7 @@ namespace CrudProject.Controllers
                 for (int i = 0; i < email.Length; i++)
                 {
                     if (email[i] == ' ')
-                        return false;                                               
+                        return false;
                 }
 
                 int atCnt = 0;
@@ -295,10 +336,10 @@ namespace CrudProject.Controllers
                 }
 
                 if (atCnt != 1)
-                    return false;                                                 
+                    return false;
 
                 if (atIndex == 0 || atIndex == email.Length - 1)
-                    return false;                                                  
+                    return false;
 
                 bool dotFound = false;
 
@@ -312,13 +353,13 @@ namespace CrudProject.Controllers
                 }
 
                 if (!dotFound)
-                    return false;                                                  
+                    return false;
 
                 if (email[atIndex + 1] == '.' || email[email.Length - 1] == '.')
                     return false;
 
                 if (!char.IsLetterOrDigit(email[0]))
-                    return false;                                                 
+                    return false;
 
                 for (int i = 0; i < email.Length; i++)
                 {
@@ -326,7 +367,7 @@ namespace CrudProject.Controllers
 
                     if (!(char.IsLetterOrDigit(c) || c == '@' || c == '.' || c == '_' || c == '-'))
                     {
-                        return false;                                             
+                        return false;
                     }
                 }
 
@@ -341,15 +382,15 @@ namespace CrudProject.Controllers
                 }
 
                 if (dotCount >= 3)
-                    return false;                                                 
+                    return false;
 
 
-                return true;                                                      
+                return true;
 
 
             }
 
-            
+
 
             public static bool IsValidPhone(string phone)
             {
@@ -368,7 +409,7 @@ namespace CrudProject.Controllers
                 return true;
             }
         }
-        
+
     }
 }
 

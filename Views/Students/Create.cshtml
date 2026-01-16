@@ -1,85 +1,80 @@
-﻿
-
- @model CrudProject.Models.Student
+﻿@model CrudProject.Models.Student
+@using CrudProject.Models
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Student";
 }
 
-<h1>Create</h1>
+<div class="container mt-4">
+    <h1>Create Student</h1>
+    <hr />
 
-<h4>Student</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" type="email" pattern="^[^&#64;\s]+&#64;[^&#64;\s]+\.com$" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-            <div class="form-group">
-                <label asp-for="Course" class="control-label">Course</label>
-                <select asp-for="CourseId" class="form-control"
-                        asp-items="@(new SelectList((List<CourseManagement>)ViewData["Course"], "CourseId", "CourseName"))" asp-for="Course">
-                    
-                         <option value="">--Select Course--</option>
-                </select>
-                <span asp-validation-for="Course" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Fees" class="control-label"></label>
-                <input asp-for="Fees" class="form-control" readonly/>
-            </div>
-            <div class="form-group">
-                <label asp-for="EnrollmentDate" class="control-label"></label>
-                <input asp-for="EnrollmentDate" class="form-control"></input>
-                <span asp-validation-for="EnrollmentDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Phone" class="control-label"></label>
-                <input asp-for="Phone" class="form-control"   />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <label asp-for="Address" class="control-label"></label>
-                <input asp-for="Address" class="form-control" type="text"  />
-                <span asp-validation-for="Address" class="text-danger"></span>
-            </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" type="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+                <div class="mb-3">
+                    <label class="form-label">Course</label>
+                    <select asp-for="CourseId" class="form-select"
+                            asp-items="@(new SelectList((List<CourseManagement>)ViewData["Course"], "CourseId", "CourseName"))">
+                        <option value="">--Select Course--</option>
+                    </select>
+                    <span asp-validation-for="CourseId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Fees" class="form-label"></label>
+                    <input asp-for="Fees" class="form-control" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="EnrollmentDate" class="form-label"></label>
+                    <input asp-for="EnrollmentDate" class="form-control" type="date" />
+                    <span asp-validation-for="EnrollmentDate" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Phone" class="form-label"></label>
+                    <input asp-for="Phone" class="form-control" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Address" class="form-label"></label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-dark">Create</button>
+                    <a asp-action="Index" class="btn btn-outline-dark">Back to List</a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
         $(document).ready(function () {
-
             $("#CourseId").change(function () {
-
                 var courseId = $(this).val();
-
                 if (courseId !== "") {
                     $.ajax({
                         url: '/Students/GetCourseFees',
@@ -93,7 +88,6 @@
                     $("#Fees").val("");
                 }
             });
-
         });
     </script>
 }
