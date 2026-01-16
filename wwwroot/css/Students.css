@@ -1,0 +1,79 @@
+﻿/* Page heading */
+h1 {
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+h4 {
+    color: #555;
+    margin-bottom: 15px;
+}
+
+/* Form container */
+.row {
+    justify-content: center;
+}
+
+.col-md-4 {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Labels */
+.control-label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Inputs & select */
+.form-control,
+select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+    /* Input focus */
+    .form-control:focus,
+    select:focus {
+        border-color: #0d6efd;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+    }
+
+/* Validation error text */
+.text-danger {
+    font-size: 13px;
+}
+
+/* Submit button */
+.btn-primary {
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px;
+    font-size: 15px;
+    border-radius: 5px;
+}
+
+/* Back to list link */
+a {
+    display: inline-block;
+    margin-top: 15px;
+    text-decoration: none;
+    color: #0d6efd;
+}
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+/* Dropdown fix */
+select.control-label {
+    padding: 8px 10px;
+}
